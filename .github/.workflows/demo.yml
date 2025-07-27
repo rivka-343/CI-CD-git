@@ -21,8 +21,15 @@ jobs:
       - run: pip install --upgrade pip && pip install -r requirements.txt
       - run: pytest
 
-  build:
+  build-and-push:
+    name: Build and Push
+    needs: test
     runs-on: ubuntu-latest
+
+    permissions:
+      # contents: read
+      packages: write
+
     steps: 
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,6 +41,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+
       - name: Set lowercase image name
         run: |
           IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
@@ -43,5 +51,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: false
+          push: true
           tags: ${{ env.IMAGE_NAME }}:latest
+          labels: ${{ steps.meta.outputs.labels }}
+            
